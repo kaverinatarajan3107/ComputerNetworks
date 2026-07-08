@@ -1,0 +1,28 @@
+//Given an integer n, return an array ans of length n + 1 such that for each i (0 <= i <= n), ans[i] is the number of 1's in the binary representation of i.
+int* countBits(int n, int* returnSize) {
+    int i;
+    int* tbin=(int*)malloc((n+1)*sizeof(int));
+    *returnSize = n + 1;
+    for(i=0;i<=n;i++){
+        char bin[33];
+        int index =0;
+        int j =0;
+        int count=0;
+        int temp=i;
+        while(temp>0){
+            bin[index++]=temp%2;
+            temp=temp/2;
+        }
+        if(i==0){
+            bin[index++]=0;
+        }
+        bin[index]='\0';
+        for(j=0;j<index;j++){
+            if(bin[j]==1){
+                count++;
+            }
+        }
+        tbin[i]=count;
+    }
+    return tbin;
+}
