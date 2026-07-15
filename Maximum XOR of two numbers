@@ -1,0 +1,44 @@
+//Given an integer array nums, return the maximum result of nums[i] XOR nums[j], where 0 <= i <= j < n
+#define MAX_VAL 
+
+int findMaximumXOR(int* nums, int numsSize) {
+    if (numsSize < 2) return 0;
+    int maxResult = 0;
+    int mask = 0;
+    
+    // Check bits from leftmost (31st) to rightmost (0th)
+    for (int i = 31; i >= 0; i--) {
+        // Set the i-th bit to 1 in the mask
+        mask = mask | (1 << i);
+        
+        // A simple, fast lookup table for the current bit prefix
+        // Using calloc ensures it's freshly reset to 0 every loop pass
+        char* seen = (char*)calloc(MAX_VAL*sizeof(char));
+        
+        // Extract and store the prefix of all numbers up to the i-th bit
+        for (int j = 0; j < numsSize; j++) {
+            int prefix = nums[j] & mask;
+            if (prefix < MAX_VAL) {
+                seen[prefix] = 1;
+            }
+        }
+        
+        // Greedily guess if the i-th bit of our maxResult can be 1
+        int greedyTry = maxResult | (1 << i);
+        
+        // If (prefix ^ greedyTry) exists in our lookup table, then our guess is valid!
+        for (int j = 0; j < numsSize; j++) {
+            int prefix = nums[j] & mask;
+            int target = prefix ^ greedyTry;
+            
+            if (target < MAX_VAL && seen[target] == 1) {
+                maxResult = greedyTry;
+                break; // Found a valid pair, keep this bit set to 1!
+            }
+        }
+        
+        free(seen); // Clean up the lookup array before checking the next bit
+    }
+    
+    return maxResult;
+}
