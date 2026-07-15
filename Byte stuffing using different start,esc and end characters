@@ -1,0 +1,108 @@
+#include <stdio.h>
+#include <string.h>
+
+int main()
+{
+    char data[100], stuffed[300] = "", received[300], recovered[100] = "";
+    int i = 0, j = 0, pos;
+
+    printf("Enter the message: ");
+    scanf("%s", data);
+
+    // Add SOF
+    strcat(stuffed, "SOF");
+
+    // Byte Stuffing
+    while (data[i] != '\0')
+    {
+        if (strncmp(&data[i], "SOF", 3) == 0)
+        {
+            strcat(stuffed, "ESCSOF");
+            i += 3;
+        }
+        else if (strncmp(&data[i], "EOF", 3) == 0)
+        {
+            strcat(stuffed, "ESCEOF");
+            i += 3;
+        }
+        else if (strncmp(&data[i], "ESC", 3) == 0)
+        {
+            strcat(stuffed, "ESCESC");
+            i += 3;
+        }
+        else
+        {
+            int len = strlen(stuffed);
+            stuffed[len] = data[i];
+            stuffed[len + 1] = '\0';
+            i++;
+        }
+    }
+
+    // Add EOF
+    strcat(stuffed, "EOF");
+
+    printf("\nOriginal Message : %s\n", data);
+    printf("Stuffed Frame    : %s\n", stuffed);
+
+    strcpy(received, stuffed);
+
+    printf("\nEnter position to introduce error (-1 for no error): ");
+    scanf("%d", &pos);
+
+    if (pos >= 0 && pos < strlen(received))
+    {
+        received[pos] = 'X';
+    }
+
+    printf("\nTransmitted Frame: %s\n", stuffed);
+    printf("Received Frame   : %s\n", received);
+
+    // Check SOF and EOF
+    if (strncmp(received, "SOF", 3) != 0 ||
+        strcmp(received + strlen(received) - 3, "EOF") != 0)
+    {
+        printf("\nFrame Error Detected! Invalid SOF/EOF.\n");
+        return 0;
+    }
+
+    // Byte De-stuffing
+    i = 3;                      // Skip SOF
+    int end = strlen(received) - 3;
+
+    while (i < end)
+    {
+        if (strncmp(&received[i], "ESCSOF", 6) == 0)
+        {
+            strcat(recovered, "SOF");
+            i += 6;
+        }
+        else if (strncmp(&received[i], "ESCEOF", 6) == 0)
+        {
+            strcat(recovered, "EOF");
+            i += 6;
+        }
+        else if (strncmp(&received[i], "ESCESC", 6) == 0)
+        {
+            strcat(recovered, "ESC");
+            i += 6;
+        }
+        else
+        {
+            int len = strlen(recovered);
+            recovered[len] = received[i];
+            recovered[len + 1] = '\0';
+            i++;
+        }
+    }
+
+    printf("Recovered Data   : %s\n", recovered);
+
+    // Compare recovered data with original
+    if (strcmp(data, recovered) == 0)
+        printf("\nFrame Received Successfully.\n");
+    else
+        printf("\nTransmission Error Detected! Data Mismatch.\n");
+
+    return 0;
+}
